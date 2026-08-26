@@ -17,10 +17,12 @@ const (
 	HelpCmd  = "/help"
 )
 
-func (p *Processor) doCmd(text string, chatID int, username string) error {
+func (b *Bot) doCmd(text string, chatID int, username string) error {
+	const op = "events_telegram.doCmd"
+
 	text = strings.TrimSpace(text)
 
-	log.Printf("Got message '%s' from '%s'", text, username)
+	log.Printf("%s: Got message '%s' from '%s'", op, text, username)
 
 	// save page: http://...
 	// random page: /rnd
@@ -28,22 +30,23 @@ func (p *Processor) doCmd(text string, chatID int, username string) error {
 	// start: /start: hi + help
 
 	if isAddCmd(text) {
-		return p.savePage(chatID, text, username)
+		return b.savePage(chatID, text, username)
+
 	}
 
 	switch text {
 	case StartCmd:
-		return p.sendStart(chatID)
+		return b.sendStart(chatID)
 	case RndCmd:
-		return p.sendRandom(chatID, username)
+		return b.sendRandom(chatID, username)
 	case HelpCmd:
-		return p.sendHelp(chatID)
+		return b.sendHelp(chatID)
 	default:
-		return p.tg.SendMessage(chatID, msgUnknownCommand)
+		return b.tg.SendMessage(chatID, msgUnknownCommand)
 	}
 }
 
-func (p *Processor) savePage(chatID int, pageURL string, username string) (err error) {
+func (b *Bot) savePage(chatID int, pageURL string, username string) (err error) {
 	const op = "events_telegram.Processor.savePage"
 	defer func() {
 		if err != nil {
@@ -51,14 +54,14 @@ func (p *Processor) savePage(chatID int, pageURL string, username string) (err e
 		}
 	}()
 
-	sendMsg := NewMessageSender(chatID, p.tg)
+	sendMsg := NewMessageSender(chatID, b.tg)
 
 	page := &storage.Page{
 		URL:      pageURL,
 		Username: username,
 	}
 
-	isExists, err := p.storage.IsExists(page)
+	isExists, err := b.storage.IsExists(page)
 	if err != nil {
 		return err
 	}
@@ -67,7 +70,7 @@ func (p *Processor) savePage(chatID int, pageURL string, username string) (err e
 		return sendMsg(msgAlreadyExists)
 	}
 
-	if err := p.storage.Save(page); err != nil {
+	if err := b.storage.Save(page); err != nil {
 		return err
 	}
 
@@ -78,7 +81,7 @@ func (p *Processor) savePage(chatID int, pageURL string, username string) (err e
 	return nil
 }
 
-func (p *Processor) sendRandom(chatID int, username string) (err error) {
+func (b *Bot) sendRandom(chatID int, username string) (err error) {
 	const op = "events_telegram.Processor.sendRandom"
 	defer func() {
 		if err != nil {
@@ -86,9 +89,9 @@ func (p *Processor) sendRandom(chatID int, username string) (err error) {
 		}
 	}()
 
-	sendMsg := NewMessageSender(chatID, p.tg)
+	sendMsg := NewMessageSender(chatID, b.tg)
 
-	page, err := p.storage.PickRandom(username)
+	page, err := b.storage.PickRandom(username)
 	if err != nil {
 		if errors.Is(err, errs.ErrNoSavedPages) {
 			return sendMsg(msgNoSavedPages)
@@ -100,16 +103,16 @@ func (p *Processor) sendRandom(chatID int, username string) (err error) {
 		return err
 	}
 
-	return p.storage.Remove(page)
+	return b.storage.Remove(page)
 
 }
 
-func (p *Processor) sendHelp(chatID int) error {
-	return NewMessageSender(chatID, p.tg)(msgHelp)
+func (b *Bot) sendHelp(chatID int) error {
+	return NewMessageSender(chatID, b.tg)(msgHelp)
 }
 
-func (p *Processor) sendStart(chatID int) error {
-	return NewMessageSender(chatID, p.tg)(msgHello)
+func (b *Bot) sendStart(chatID int) error {
+	return NewMessageSender(chatID, b.tg)(msgHello)
 }
 
 func NewMessageSender(chatID int, tg *telegram.Client) func(string) error {

@@ -58,6 +58,10 @@ func (s *Storage) PickRandom(userName string) (*storage.Page, error) {
 
 	path := filepath.Join(s.basePath, userName)
 
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return nil, errs.ErrNoSavedPages
+	}
+
 	files, err := os.ReadDir(path)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)

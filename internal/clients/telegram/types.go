@@ -5,6 +5,11 @@ type UpdatesResponse struct {
 	Result []Update `json:"result"`
 }
 
+type apiResponse struct {
+	Ok          bool   `json:"ok"`
+	Description string `json:"description"`
+}
+
 type Update struct {
 	ID      int              `json:"update_id"`
 	Message *IncomingMessage `json:"message"`

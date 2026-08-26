@@ -8,7 +8,7 @@ import (
 	"tgbot/internal/storage"
 )
 
-type Processor struct {
+type Bot struct {
 	tg      *telegram.Client
 	offset  int
 	storage storage.Storage
@@ -24,17 +24,17 @@ var (
 	ErrUnknownMetaType  = errors.New("unknown meta type")
 )
 
-func New(client *telegram.Client, storage storage.Storage) *Processor {
-	return &Processor{
+func New(client *telegram.Client, storage storage.Storage) *Bot {
+	return &Bot{
 		tg:      client,
 		storage: storage,
 	}
 }
 
-func (p *Processor) Fetch(limit int) ([]events.Event, error) {
+func (b *Bot) Fetch(limit int) ([]events.Event, error) {
 	const op = "events_telegram.Processor.Fetch"
 
-	updates, err := p.tg.Updates(p.offset, limit)
+	updates, err := b.tg.Updates(b.offset, limit)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -49,28 +49,28 @@ func (p *Processor) Fetch(limit int) ([]events.Event, error) {
 		res = append(res, toEvent(update))
 	}
 
-	p.offset = updates[len(updates)-1].ID + 1
+	b.offset = updates[len(updates)-1].ID + 1
 
 	return res, nil
 
 }
 
-func (p *Processor) Process(event events.Event) error {
+func (b *Bot) Process(event events.Event) error {
 	switch event.Type {
 	case events.Message:
-		return p.processMessage(event)
+		return b.processMessage(event)
 	default:
 		return fmt.Errorf("process message: %w", ErrUnknownEventType)
 	}
 }
 
-func (p *Processor) processMessage(event events.Event) error {
+func (b *Bot) processMessage(event events.Event) error {
 	meta, err := meta(event)
 	if err != nil {
 		return fmt.Errorf("process message: %w", err)
 	}
 
-	if err := p.doCmd(event.Text, meta.ChatID, meta.Username); err != nil {
+	if err := b.doCmd(event.Text, meta.ChatID, meta.Username); err != nil {
 		return fmt.Errorf("process message: %w", err)
 	}
 

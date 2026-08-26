@@ -15,6 +15,11 @@ const (
 	sendMessageMethod = "sendMessage"
 )
 
+const (
+	chatIdParam = "chat_id"
+	textParam   = "text"
+)
+
 type Client struct {
 	host     string
 	basePath string
@@ -38,8 +43,8 @@ func (c *Client) SendMessage(chatID int, text string) error {
 
 	query := url.Values{}
 
-	query.Add("chatID", strconv.Itoa(chatID))
-	query.Add("text", text)
+	query.Add(chatIdParam, strconv.Itoa(chatID))
+	query.Add(textParam, text)
 
 	_, err := c.doRequest(query, sendMessageMethod)
 	if err != nil {
@@ -70,8 +75,14 @@ func (c *Client) Updates(offset, limit int) ([]Update, error) {
 	return response.Result, nil
 }
 
-func (c *Client) doRequest(query url.Values, method string) ([]byte, error) {
+func (c *Client) doRequest(query url.Values, method string) (body []byte, err error) {
 	const op = "telegram.doRequest"
+
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("%s: panic recovered: %v", op, r)
+		}
+	}()
 
 	url := url.URL{
 		Scheme: "https",
@@ -86,16 +97,25 @@ func (c *Client) doRequest(query url.Values, method string) ([]byte, error) {
 
 	request.URL.RawQuery = query.Encode()
 
-	resp, err := c.client.Do(request)
+	response, err := c.client.Do(request)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	defer resp.Body.Close()
+	defer response.Body.Close()
 
-	body, err := io.ReadAll(request.Body)
+	body, err = io.ReadAll(response.Body)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	var apiResp apiResponse
+	if err := json.Unmarshal(body, &apiResp); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	if !apiResp.Ok {
+		return nil, fmt.Errorf("%s: telegram api error: %s", op, apiResp.Description)
 	}
 
 	return body, nil
