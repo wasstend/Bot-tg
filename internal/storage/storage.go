@@ -7,6 +7,7 @@ import (
 )
 
 type Storage interface {
+	// TODO: context
 	Save(p *Page) error
 	PickRandom(userName string) (*Page, error)
 	Remove(p *Page) error

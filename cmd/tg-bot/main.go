@@ -32,6 +32,8 @@ func main() {
 	storage, err := postgres.New(ctx)
 	if err != nil {
 		log.Fatal("failed to connect to postgres", "error", err)
+	} else {
+		log.Debug("connected to postgres")
 	}
 
 	tgBot := events_telegram.New(tgClient, storage, log)

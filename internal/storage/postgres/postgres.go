@@ -12,6 +12,7 @@ import (
 type Postgres struct {
 	*pgxpool.Pool
 	timeout time.Duration
+	ctx     context.Context
 }
 
 func New(ctx context.Context) (*Postgres, error) {
@@ -43,6 +44,7 @@ func New(ctx context.Context) (*Postgres, error) {
 	return &Postgres{
 		Pool:    pool,
 		timeout: config.Timeout,
+		ctx:     ctx,
 	}, nil
 }
 
@@ -50,7 +52,10 @@ func (p *Postgres) Save(page *storage.Page) error {
 	//ctx, cancel := context.WithTimeout(context.Background(), p.timeout)
 	//defer cancel()
 	//
-	//query := ``
+	//query := `
+	//INSERT INTO tgbot.pages (url, user_id)
+	//VALUES ($1, $2)
+	//`
 
 	return nil
 }
