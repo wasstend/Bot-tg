@@ -1,11 +1,13 @@
 package logger
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
+	"runtime"
 	"time"
 )
 
@@ -63,6 +65,13 @@ func (l *Logger) Close() {
 }
 
 func (l *Logger) Fatal(msg string, v ...any) {
-	l.Error(msg, v...)
+	var pcs [1]uintptr
+	runtime.Callers(2, pcs[:]) // skip [Callers, Fatal] to capture the real caller
+
+	r := slog.NewRecord(time.Now(), slog.LevelError, msg, pcs[0])
+	r.Add(v...)
+
+	_ = l.Handler().Handle(context.Background(), r)
+
 	os.Exit(1)
 }

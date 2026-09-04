@@ -7,11 +7,11 @@ import (
 )
 
 type Config struct {
-	Username string        `envconfig:"USERNAME" required:"true"`
+	Username string        `envconfig:"USER" required:"true"`
 	Password string        `envconfig:"PASSWORD" required:"true"`
 	Host     string        `envconfig:"HOST" required:"true"`
 	Port     string        `envconfig:"PORT" default:"5432"`
-	Database string        `envconfig:"DATABASE" required:"true"`
+	Database string        `envconfig:"DB" required:"true"`
 	Timeout  time.Duration `envconfig:"TIMEOUT" default:"30s"`
 }
 

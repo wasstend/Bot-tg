@@ -44,3 +44,13 @@ migrate-up:
 
 migrate-down:
 	@make migrate-action action=down
+
+# Logs
+logs-cleanup:
+	@read -p "WARN: Do you want to delete all log files files? [y/N]: " ans; \
+	if [ "$$ans" = "y" ]; then \
+		rm -rf ${PROJECT_ROOT}/logs && \
+		echo "Log files cleared"; \
+	else \
+		echo "Cancelled"; \
+	fi
