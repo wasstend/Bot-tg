@@ -1,10 +1,11 @@
 package main
 
 import (
-	"log"
+	"os"
 	"tgbot/internal/clients/telegram"
 	event_consumer "tgbot/internal/consumer/event-consumer"
 	events_telegram "tgbot/internal/events/telegram"
+	"tgbot/internal/logger"
 	"tgbot/internal/storage/files"
 	"tgbot/internal/token"
 )
@@ -17,15 +18,26 @@ const (
 
 func main() {
 
-	tgClient := telegram.New(tgBotHost, token.TokenMust())
+	log, mustCloseFile := logger.SetupLogger()
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			panic("failed to close logs file: " + err.Error())
+		}
+	}(mustCloseFile)
+
+	log.Debug("initialized logger")
+
+	tgClient := telegram.New(tgBotHost, token.MustToken())
 
 	storage := files.New(storageBasePath)
 
-	tgBot := events_telegram.New(tgClient, storage)
+	tgBot := events_telegram.New(tgClient, storage, log)
 
-	consumer := event_consumer.New(tgBot, tgBot, batchSize)
+	consumer := event_consumer.New(tgBot, tgBot, batchSize, log)
 
 	if err := consumer.Start(); err != nil {
-		log.Fatal("service is stopped", err)
+		log.Error("service is stopped", err)
+		os.Exit(1)
 	}
 }

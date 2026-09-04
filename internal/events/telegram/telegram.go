@@ -3,6 +3,7 @@ package events_telegram
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"tgbot/internal/clients/telegram"
 	"tgbot/internal/events"
 	"tgbot/internal/storage"
@@ -12,6 +13,7 @@ type Bot struct {
 	tg      *telegram.Client
 	offset  int
 	storage storage.Storage
+	log     *slog.Logger
 }
 
 type Meta struct {
@@ -24,10 +26,15 @@ var (
 	ErrUnknownMetaType  = errors.New("unknown meta type")
 )
 
-func New(client *telegram.Client, storage storage.Storage) *Bot {
+func New(
+	client *telegram.Client,
+	storage storage.Storage,
+	log *slog.Logger,
+) *Bot {
 	return &Bot{
 		tg:      client,
 		storage: storage,
+		log:     log,
 	}
 }
 

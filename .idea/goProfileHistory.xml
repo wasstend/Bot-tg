@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="GoProfileHistory">
+    <profile entry="$USER_HOME$/GoLandProfiles/go_build_tgbot_cmd_tg-bot-allocs-2026-09-02-172651-099.pprof">
+      <GoProfileMapEntry>
+        <option name="buildAnchorMillis" value="1788344784061" />
+        <option name="file" value="go_build_tgbot_cmd_tg-bot-allocs-2026-09-02-172651-099.pprof" />
+        <option name="ours" value="true" />
+        <option name="profileType" value="ALLOCS" />
+      </GoProfileMapEntry>
+    </profile>
+  </component>
+</project>

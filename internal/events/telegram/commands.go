@@ -3,7 +3,6 @@ package events_telegram
 import (
 	"errors"
 	"fmt"
-	"log"
 	"net/url"
 	"strings"
 	"tgbot/internal/clients/telegram"
@@ -22,7 +21,7 @@ func (b *Bot) doCmd(text string, chatID int, username string) error {
 
 	text = strings.TrimSpace(text)
 
-	log.Printf("%s: Got message '%s' from '%s'", op, text, username)
+	b.log.Info("Got new message", "text", text, "username", username)
 
 	// save page: http://...
 	// random page: /rnd

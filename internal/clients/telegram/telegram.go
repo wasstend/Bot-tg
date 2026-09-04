@@ -18,6 +18,8 @@ const (
 const (
 	chatIdParam = "chat_id"
 	textParam   = "text"
+	limitParam  = "limit"
+	offsetParam = "offset"
 )
 
 type Client struct {
@@ -59,8 +61,8 @@ func (c *Client) Updates(offset, limit int) ([]Update, error) {
 
 	query := url.Values{}
 
-	query.Add("offset", strconv.Itoa(offset))
-	query.Add("limit", strconv.Itoa(limit))
+	query.Add(offsetParam, strconv.Itoa(offset))
+	query.Add(limitParam, strconv.Itoa(limit))
 
 	body, err := c.doRequest(query, getUpdatesMethod)
 	if err != nil {
@@ -84,13 +86,13 @@ func (c *Client) doRequest(query url.Values, method string) (body []byte, err er
 		}
 	}()
 
-	url := url.URL{
+	urlPath := url.URL{
 		Scheme: "https",
 		Host:   c.host,
 		Path:   path.Join(c.basePath, method),
 	}
 
-	request, err := http.NewRequest(http.MethodGet, url.String(), nil)
+	request, err := http.NewRequest(http.MethodGet, urlPath.String(), nil)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -102,7 +104,11 @@ func (c *Client) doRequest(query url.Values, method string) (body []byte, err er
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	defer response.Body.Close()
+	defer func() {
+		if cerr := response.Body.Close(); cerr != nil && err == nil {
+			err = fmt.Errorf("%s: %w", op, cerr)
+		}
+	}()
 
 	body, err = io.ReadAll(response.Body)
 	if err != nil {

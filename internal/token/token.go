@@ -1,20 +1,19 @@
 package token
 
 import (
-	"log"
 	"os"
 
 	"github.com/joho/godotenv"
 )
 
-func TokenMust() string {
+func MustToken() string {
 	if err := godotenv.Load(); err != nil {
-		log.Fatal("no .env file found:", err)
+		panic("no .env file found:" + err.Error())
 	}
 	token := os.Getenv("TELEGRAM_BOT_TOKEN")
 
 	if token == "" {
-		log.Fatal("token is not set")
+		panic("token is not set")
 	}
 
 	return token
