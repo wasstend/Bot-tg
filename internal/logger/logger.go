@@ -15,7 +15,20 @@ const (
 	basicDirPerm     = 0755
 )
 
-func SetupLogger() (*slog.Logger, *os.File) {
+type Logger struct {
+	*slog.Logger
+	file *os.File
+}
+
+func New() *Logger {
+	logger, file := setupLogger()
+	return &Logger{
+		Logger: logger,
+		file:   file,
+	}
+}
+
+func setupLogger() (*slog.Logger, *os.File) {
 	currentTime := time.Now().Format("2006-01-02_15:04:05")
 
 	filePath := filepath.Join(logsPath, fmt.Sprintf("%s.log", currentTime))
@@ -40,4 +53,16 @@ func SetupLogger() (*slog.Logger, *os.File) {
 	})
 
 	return slog.New(handler), file
+}
+
+func (l *Logger) Close() {
+	err := l.file.Close()
+	if err != nil {
+		panic("failed to close logs file: " + err.Error())
+	}
+}
+
+func (l *Logger) Fatal(msg string, v ...any) {
+	l.Error(msg, v...)
+	os.Exit(1)
 }

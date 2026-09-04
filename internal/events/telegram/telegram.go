@@ -3,9 +3,9 @@ package events_telegram
 import (
 	"errors"
 	"fmt"
-	"log/slog"
 	"tgbot/internal/clients/telegram"
 	"tgbot/internal/events"
+	"tgbot/internal/logger"
 	"tgbot/internal/storage"
 )
 
@@ -13,7 +13,7 @@ type Bot struct {
 	tg      *telegram.Client
 	offset  int
 	storage storage.Storage
-	log     *slog.Logger
+	log     *logger.Logger
 }
 
 type Meta struct {
@@ -29,7 +29,7 @@ var (
 func New(
 	client *telegram.Client,
 	storage storage.Storage,
-	log *slog.Logger,
+	log *logger.Logger,
 ) *Bot {
 	return &Bot{
 		tg:      client,

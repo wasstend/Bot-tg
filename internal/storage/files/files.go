@@ -14,15 +14,15 @@ const (
 	defaultPerm = 0774
 )
 
-type Storage struct {
+type FileStorage struct {
 	basePath string
 }
 
-func New(basePath string) *Storage {
-	return &Storage{basePath: basePath}
+func New(basePath string) *FileStorage {
+	return &FileStorage{basePath: basePath}
 }
 
-func (s *Storage) Save(page *storage.Page) error {
+func (s *FileStorage) Save(page *storage.Page) error {
 	const op = "files.Save"
 
 	filePath := filepath.Join(s.basePath, page.Username)
@@ -53,7 +53,7 @@ func (s *Storage) Save(page *storage.Page) error {
 
 }
 
-func (s *Storage) PickRandom(userName string) (*storage.Page, error) {
+func (s *FileStorage) PickRandom(userName string) (*storage.Page, error) {
 	const op = "files.PickRandom"
 
 	path := filepath.Join(s.basePath, userName)
@@ -79,7 +79,7 @@ func (s *Storage) PickRandom(userName string) (*storage.Page, error) {
 
 }
 
-func (s *Storage) Remove(p *storage.Page) error {
+func (s *FileStorage) Remove(p *storage.Page) error {
 	const op = "files.Remove"
 
 	fileName, err := fileName(p)
@@ -96,7 +96,7 @@ func (s *Storage) Remove(p *storage.Page) error {
 	return nil
 }
 
-func (s *Storage) IsExists(p *storage.Page) (bool, error) {
+func (s *FileStorage) IsExists(p *storage.Page) (bool, error) {
 	const op = "files.IsExists"
 
 	fileName, err := fileName(p)
@@ -116,7 +116,7 @@ func (s *Storage) IsExists(p *storage.Page) (bool, error) {
 	return true, nil
 }
 
-func (s *Storage) decodePage(filePath string) (*storage.Page, error) {
+func (s *FileStorage) decodePage(filePath string) (*storage.Page, error) {
 	const op = "files.decodePage"
 
 	file, err := os.Open(filePath)

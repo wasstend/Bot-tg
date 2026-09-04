@@ -2,8 +2,8 @@ package event_consumer
 
 import (
 	"log"
-	"log/slog"
 	"tgbot/internal/events"
+	"tgbot/internal/logger"
 	"time"
 )
 
@@ -11,14 +11,14 @@ type Consumer struct {
 	fetcher   events.Fetcher
 	processor events.Processor
 	batchSize int
-	log       *slog.Logger
+	log       *logger.Logger
 }
 
 func New(
 	fetcher events.Fetcher,
 	processor events.Processor,
 	batchSize int,
-	log *slog.Logger,
+	log *logger.Logger,
 ) Consumer {
 	return Consumer{
 		fetcher:   fetcher,
