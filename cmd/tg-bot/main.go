@@ -27,8 +27,6 @@ func main() {
 
 	tgClient := telegram.New(tgBotHost, token.MustToken())
 
-	//storage := files.New(storageBasePath)
-
 	storage, err := postgres.New(ctx)
 	if err != nil {
 		log.Fatal("failed to connect to postgres", "error", err)
@@ -36,7 +34,7 @@ func main() {
 		log.Debug("connected to postgres")
 	}
 
-	tgBot := events_telegram.New(tgClient, storage, log)
+	tgBot := events_telegram.New(tgClient, storage, log, ctx)
 
 	consumer := event_consumer.New(tgBot, tgBot, batchSize, log)
 

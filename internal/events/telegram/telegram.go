@@ -1,6 +1,7 @@
 package events_telegram
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"tgbot/internal/clients/telegram"
@@ -12,8 +13,24 @@ import (
 type Bot struct {
 	tg      *telegram.Client
 	offset  int
-	storage storage.Storage
+	storage Storage
 	log     *logger.Logger
+	ctx     context.Context
+}
+
+// Storage interface represents storage of the saved pages(urls) and users
+type Storage interface {
+	// TODO: context
+	SavePage(ctx context.Context, page storage.Page) error
+	GetPage(ctx context.Context, page storage.Page) (storage.Page, error)
+	CheckPage(ctx context.Context, page storage.Page) (bool, error)
+	PickRandomPage(ctx context.Context, user storage.User) (storage.Page, error)
+
+	SaveUser(ctx context.Context, userName string) (storage.User, error)
+	GetUser(ctx context.Context, userName string) (storage.User, error)
+	CheckUser(ctx context.Context, userName string) (bool, error)
+
+	Remove(ctx context.Context, p storage.Page) error
 }
 
 type Meta struct {
@@ -28,13 +45,15 @@ var (
 
 func New(
 	client *telegram.Client,
-	storage storage.Storage,
+	storage Storage,
 	log *logger.Logger,
+	ctx context.Context,
 ) *Bot {
 	return &Bot{
 		tg:      client,
 		storage: storage,
 		log:     log,
+		ctx:     ctx,
 	}
 }
 

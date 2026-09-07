@@ -46,6 +46,12 @@ func (b *Bot) doCmd(text string, chatID int, username string) error {
 }
 
 func (b *Bot) savePage(chatID int, pageURL string, username string) (err error) {
+
+	// Save new page:
+	//		1. check if user exists: if it doesn't - create a new one. Take its id
+	//		2. check if page already exist: if exists - return message
+	//		3. save new page
+
 	const op = "events_telegram.Processor.savePage"
 	defer func() {
 		if err != nil {
@@ -55,29 +61,44 @@ func (b *Bot) savePage(chatID int, pageURL string, username string) (err error) 
 
 	sendMsg := NewMessageSender(chatID, b.tg)
 
-	page := &storage.Page{
-		URL:      pageURL,
+	user := storage.User{
 		Username: username,
 	}
 
-	isExists, err := b.storage.IsExists(page)
+	user, err = b.storage.GetUser(b.ctx, username)
+	if err != nil {
+		if errors.Is(err, errs.ErrUserNotFound) {
+			user, err = b.storage.SaveUser(b.ctx, username)
+			b.log.Info("saved user", "user", user)
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	b.log.Info("got user", "user", user)
+
+	page := storage.Page{
+		URL:    pageURL,
+		UserID: user.ID,
+	}
+
+	checkPage, err := b.storage.CheckPage(b.ctx, page)
+	b.log.Info("checkPage", "page", page, "checkPage", checkPage)
 	if err != nil {
 		return err
 	}
-
-	if isExists {
+	if checkPage {
 		return sendMsg(msgAlreadyExists)
 	}
 
-	if err := b.storage.Save(page); err != nil {
+	if err = b.storage.SavePage(b.ctx, page); err != nil {
 		return err
 	}
+	b.log.Info("saved page", "page", page)
 
-	if err := sendMsg(msgSaved); err != nil {
-		return err
-	}
-
-	return nil
+	return sendMsg(msgSaved)
 }
 
 func (b *Bot) sendRandom(chatID int, username string) (err error) {
@@ -90,19 +111,31 @@ func (b *Bot) sendRandom(chatID int, username string) (err error) {
 
 	sendMsg := NewMessageSender(chatID, b.tg)
 
-	page, err := b.storage.PickRandom(username)
+	user, err := b.storage.GetUser(b.ctx, username)
 	if err != nil {
-		if errors.Is(err, errs.ErrNoSavedPages) {
+		if errors.Is(err, errs.ErrUserNotFound) {
+			b.log.Warn("no saved pages", "error", err)
 			return sendMsg(msgNoSavedPages)
 		}
 		return err
 	}
+	b.log.Info("got user", "user", user)
+
+	page, err := b.storage.PickRandomPage(b.ctx, user)
+	if err != nil {
+		if errors.Is(err, errs.ErrPageNotFound) {
+			b.log.Warn("no saved pages", "error", err)
+			return sendMsg(msgNoSavedPages)
+		}
+		return err
+	}
+	b.log.Info("got random page", "random page", page)
 
 	if err := sendMsg(page.URL); err != nil {
 		return err
 	}
 
-	return b.storage.Remove(page)
+	return b.storage.Remove(b.ctx, page)
 
 }
 

@@ -6,7 +6,10 @@ export PROJECT_ROOT=$(shell pwd)
 local-run:
 	@export POSTGRES_HOST=localhost && \
 	go mod tidy && \
-	go run cmd/tg-bot/main.go
+	go run cmd/tg-bot/main.go | jq
+
+checkout:
+	@go vet ./... && go build ./...
 
 # PostgreSQL
 postgres-up:
